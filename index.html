@@ -3,135 +3,183 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sorteig Números 1-25</title>
+    <title>Pissarra Interactiva: Mates i Llengua</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        /* Fons animat cool */
         body {
-            font-family: 'Segoe UI', sans-serif;
+            font-family: 'Poppins', sans-serif;
             margin: 0;
             padding: 20px;
             min-height: 100vh;
-            background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #1a1a2e);
-            background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
-            color: white;
+            background-color: #2c3e2d; /* Color de pissarra verda fosca */
+            color: #f0f0f0;
             display: flex;
             flex-direction: column;
             align-items: center;
+            overflow-x: hidden;
         }
 
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        /* Fons Canvas amb simbologia de Llengua i Mates */
+        #bgCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
         }
 
-        /* Contenidor principal transparent */
         .container {
             width: 100%;
             max-width: 1000px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(28, 40, 29, 0.85);
+            backdrop-filter: blur(5px);
+            border-radius: 15px;
+            border: 3px dashed rgba(255, 255, 255, 0.3);
             padding: 30px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             text-align: center;
             margin-bottom: 40px;
+            position: relative;
         }
 
         h1 {
-            margin: 0 0 10px 0;
-            font-size: 2.5em;
+            margin: 0 0 20px 0;
+            font-size: 2.8em;
             text-transform: uppercase;
             letter-spacing: 2px;
-            background: linear-gradient(90deg, #00d2ff, #3a7bd5);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #ffffff;
+            text-shadow: 2px 2px 0px #d35400, -2px -2px 0px #2980b9;
+        }
+
+        /* Sistema de Pestanyes (Tabs) */
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            font-family: 'Poppins', sans-serif;
+            background: transparent;
+            border: 2px solid #7f8c8d;
+            padding: 10px 30px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #bdc3c7;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .tab-btn.active.mates {
+            background: #2980b9;
+            border-color: #3498db;
+            color: white;
+            box-shadow: 0 0 15px rgba(52, 152, 219, 0.5);
+        }
+        .tab-btn.active.llengua {
+            background: #d35400;
+            border-color: #e67e22;
+            color: white;
+            box-shadow: 0 0 15px rgba(230, 126, 34, 0.5);
         }
 
         .subtitol {
-            color: #aebcbf;
-            margin-bottom: 30px;
+            font-family: 'Caveat', cursive;
+            font-size: 1.6em;
+            color: #f1c40f;
+            margin-bottom: 25px;
         }
 
-        /* Botons */
-        .botones {
+        .controls {
             display: flex;
             justify-content: center;
             gap: 15px;
             flex-wrap: wrap;
+            margin-bottom: 30px;
         }
 
         button {
-            background: linear-gradient(45deg, #3a7bd5, #00d2ff);
-            border: none;
-            padding: 15px 30px;
-            font-size: 18px;
-            font-weight: bold;
-            color: white;
-            border-radius: 50px;
+            font-family: 'Poppins', sans-serif;
+            border: 2px solid #ecf0f1;
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 15px rgba(0, 210, 255, 0.4);
+            transition: all 0.3s;
+            box-shadow: 3px 3px 0px rgba(0,0,0,0.4);
+        }
+
+        /* Botons específics per pestanya */
+        #mates-content button:not(.reset) {
+            background: #2980b9;
+            color: #ecf0f1;
+        }
+        #llengua-content button:not(.reset) {
+            background: #d35400;
+            color: #ecf0f1;
         }
 
         button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0, 210, 255, 0.6);
+            transform: translate(-2px, -2px);
+            box-shadow: 5px 5px 0px rgba(0,0,0,0.6);
         }
-
+        button:active {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0px rgba(0,0,0,0.4);
+        }
         button:disabled {
-            background: #555;
+            background: #2c3e50 !important;
+            color: #7f8c8d !important;
+            border-color: #7f8c8d !important;
             cursor: not-allowed;
             box-shadow: none;
             transform: none;
         }
 
         button.reset {
-            background: linear-gradient(45deg, #ff416c, #ff4b2b);
-            box-shadow: 0 4px 15px rgba(255, 75, 43, 0.4);
+            background: #c0392b;
+            border-color: #e74c3c;
+            color: white;
         }
         button.reset:hover {
-            box-shadow: 0 8px 20px rgba(255, 75, 43, 0.6);
+            background: #e74c3c;
         }
 
-        /* Contenidor de totes les graelles */
-        #graellesContainer {
-            width: 100%;
-            max-width: 1000px;
+        .grids-container {
             display: flex;
             flex-direction: column;
             gap: 40px;
             padding-bottom: 40px;
         }
 
-        /* Cada Graella (Dia) */
         .graella-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(20, 30, 21, 0.9);
+            border: 2px dashed rgba(241, 196, 15, 0.4);
             border-radius: 15px;
             padding: 20px;
-            animation: slideDown 0.5s ease-out forwards;
+            animation: slideDown 0.6s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
         }
 
         @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-30px); }
-            to { opacity: 1; transform: translateY(0); }
+            from { opacity: 0; transform: translateY(-50px) scale(0.9); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
         .titol-dia {
-            font-size: 1.8em;
+            font-family: 'Caveat', cursive;
+            font-size: 2.5em;
             margin-bottom: 20px;
-            color: #00d2ff;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-bottom: 2px solid rgba(0, 210, 255, 0.3);
-            padding-bottom: 10px;
+            color: #f1c40f;
+            border-bottom: 3px solid rgba(241, 196, 15, 0.3);
+            padding-bottom: 5px;
             display: inline-block;
         }
 
-        /* Pilars dins de la graella */
         .pilars-container {
             display: flex;
             justify-content: center;
@@ -140,22 +188,27 @@
         }
 
         .pilar {
-            background: rgba(0, 0, 0, 0.4);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            width: 150px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid #7f8c8d;
+            border-radius: 10px;
+            width: 160px;
             display: flex;
             flex-direction: column;
             overflow: hidden;
         }
 
         .pilar-header {
-            background: linear-gradient(180deg, #3a7bd5, #00d2ff);
             padding: 10px 0;
-            font-weight: bold;
+            font-weight: 800;
             font-size: 1.1em;
             text-transform: uppercase;
+            border-bottom: 2px solid #7f8c8d;
+            color: #ecf0f1;
         }
+        
+        /* Colors de capçalera segons l'assignatura */
+        #mates-content .pilar-header { background: #34495e; }
+        #llengua-content .pilar-header { background: #7d3c98; }
 
         .pilar-body {
             display: flex;
@@ -164,27 +217,26 @@
             gap: 8px;
         }
 
-        /* Slots de persones */
         .persona-slot {
-            height: 45px;
-            border-radius: 8px;
+            height: 50px;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 22px;
             font-weight: bold;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px dashed rgba(255, 255, 255, 0.1);
+            background: transparent;
+            border: 2px dashed rgba(255, 255, 255, 0.2);
             color: rgba(255, 255, 255, 0.2);
             opacity: 0;
             transform: scale(0);
         }
 
         .persona-slot.filled {
-            background: linear-gradient(135deg, #11998e, #38ef7d);
-            border: 1px solid #38ef7d;
-            color: white;
-            box-shadow: 0 0 10px rgba(56, 239, 125, 0.4);
+            background: #27ae60;
+            border: 2px solid #2ecc71;
+            color: #fff;
+            box-shadow: 0 0 10px rgba(46, 204, 113, 0.4);
             animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
 
@@ -196,109 +248,297 @@
 
         .nota {
             margin-top: 20px;
-            font-style: italic;
-            color: #8b9bb3;
-            font-size: 14px;
+            font-family: 'Caveat', cursive;
+            font-size: 1.4em;
+            color: #bdc3c7;
         }
 
         @media (max-width: 768px) {
-            .pilar { width: 100px; }
-            .persona-slot { height: 35px; font-size: 16px; }
-            h1 { font-size: 1.8em; }
+            .pilar { width: 110px; }
+            .persona-slot { height: 40px; font-size: 18px; }
+            h1 { font-size: 2em; }
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>Números 1 - 25</h1>
-    <div class="subtitol">Cada dia reparteix 25 números en 5 racós diferents.</div>
+<canvas id="bgCanvas"></canvas>
 
-    <div class="botones">
-        <button id="btnSorteig" onclick="sorteigDia()">Sorteig del Dia</button>
-        <button class="reset" id="btnNovaBaralla" onclick="novaBaralla()" disabled>Nova baralla</button>
-    </div>
+<div class="container">
+    <h1>Aula Interactiva</h1>
     
+    <div class="tabs">
+        <button class="tab-btn mates active" onclick="canviarPestanya('mates')">Matemàtiques</button>
+        <button class="tab-btn llengua" onclick="canviarPestanya('llengua')">Llengua</button>
+    </div>
+
+    <!-- CONTINGUT MATEMÀTIQUES -->
+    <div id="mates-content">
+        <div class="subtitol">Sorteig de Racós (1 al 25)</div>
+        <div class="controls">
+            <button id="btnSorteig-mates" onclick="jocMates.sorteigDia()">Sorteig del Dia</button>
+            <button class="reset" id="btnNovaBaralla-mates" onclick="jocMates.novaBaralla(true)">Nova baralla</button>
+        </div>
+        <div class="grids-container" id="graelles-mates"></div>
+    </div>
+
+    <!-- CONTINGUT LLENGUA -->
+    <div id="llengua-content" style="display: none;">
+        <div class="subtitol">Sorteig de Racós (1 al 25)</div>
+        <div class="controls">
+            <button id="btnSorteig-llengua" onclick="jocLlengua.sorteigDia()">Sorteig del Dia</button>
+            <button class="reset" id="btnNovaBaralla-llengua" onclick="jocLlengua.novaBaralla(true)">Nova baralla</button>
+        </div>
+        <div class="grids-container" id="graelles-llengua"></div>
+    </div>
+
     <div class="nota">
         "Que es faça un sorteig de 'Nova baralla' per a quan ja han passat per tots."
     </div>
 </div>
 
-<!-- Aquí s'afegiran les diferents graelles (Dies) -->
-<div id="graellesContainer"></div>
-
 <script>
-    let diaActual = 1;
-    const TOTAL_DIES = 5;
-
-    function sorteigDia() {
-        if (diaActual > TOTAL_DIES) {
-            alert("Ja s'han fet els 5 dies! Prem 'Nova baralla' per començar de nou.");
-            return;
+    // --- CLASSE PER GESTIONAR EL JOC DE CADA ASSIGNATURA ---
+    class SorteigAssignatura {
+        constructor(assignatura, containerId, btnSorteigId, btnResetId) {
+            this.assignatura = assignatura;
+            this.containerId = containerId;
+            this.btnSorteig = document.getElementById(btnSorteigId);
+            this.btnReset = document.getElementById(btnResetId);
+            this.diaActual = 1;
+            this.barallesRacos = [[], [], [], [], []];
+            this.historialResultats = [];
+            this.TOTAL_DIES = 5;
+            this.carregarEstat();
         }
 
-        // Crear array del 1 al 25 i barallar-ho
-        let numeros = Array.from({length: 25}, (_, i) => i + 1);
-        numeros.sort(() => Math.random() - 0.5);
-
-        // Crear la nova graella per al dia actual
-        const container = document.getElementById('graellesContainer');
-        const graella = document.createElement('div');
-        graella.className = 'graella-card';
-        graella.innerHTML = `
-            <div class="titol-dia">Dia ${diaActual}</div>
-            <div class="pilars-container" id="pilars-${diaActual}"></div>
-        `;
-        
-        // Posar la graella al principi de tot (el dia més nou a dalt)
-        container.prepend(graella);
-
-        const pilarsContainer = document.getElementById(`pilars-${diaActual}`);
-
-        // Crear els 5 racós
-        for(let r = 1; r <= 5; r++) {
-            let pilar = document.createElement('div');
-            pilar.className = 'pilar';
-            pilar.innerHTML = `
-                <div class="pilar-header">Racó ${r}</div>
-                <div class="pilar-body" id="pilar-body-${r}"></div>
-            `;
-            pilarsContainer.appendChild(pilar);
-            
-            let body = pilar.querySelector('.pilar-body');
-
-            // Posar 5 números (persones) a cada racó
-            for(let p = 0; p < 5; p++) {
-                let num = numeros.pop(); // Treure l'últim número de la llista barallada
-                let slot = document.createElement('div');
-                slot.className = 'persona-slot';
-                slot.innerText = num;
-                body.appendChild(slot);
-
-                // Animació escalonada (un darrere l'altre)
-                let delay = (r - 1) * 100 + p * 50;
-                setTimeout(() => {
-                    slot.classList.add('filled');
-                }, delay);
+        carregarEstat() {
+            const savedData = localStorage.getItem('sorteig_' + this.assignatura);
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                this.diaActual = data.diaActual;
+                this.barallesRacos = data.barallesRacos;
+                this.historialResultats = data.historialResultats;
+                this.renderitzarHistorial();
+                
+                if (this.diaActual > this.TOTAL_DIES) {
+                    this.btnReset.disabled = false;
+                    this.btnSorteig.disabled = true;
+                }
+            } else {
+                this.novaBaralla(false);
             }
         }
 
-        diaActual++;
+        guardarProgres() {
+            const data = {
+                diaActual: this.diaActual,
+                barallesRacos: this.barallesRacos,
+                historialResultats: this.historialResultats
+            };
+            localStorage.setItem('sorteig_' + this.assignatura, JSON.stringify(data));
+        }
 
-        // Comprovar si ja hem acabat els 5 dies
-        if (diaActual > TOTAL_DIES) {
-            document.getElementById('btnNovaBaralla').disabled = false;
-            document.getElementById('btnSorteig').disabled = true;
+        inicialitzarBaralles() {
+            for(let i = 0; i < 5; i++) {
+                this.barallesRacos[i] = Array.from({length: 25}, (_, idx) => idx + 1);
+                this.barallesRacos[i].sort(() => Math.random() - 0.5);
+            }
+        }
+
+        sorteigDia() {
+            if (this.diaActual > this.TOTAL_DIES) return;
+
+            let resultatsDia = [];
+            for(let r = 0; r < 5; r++) {
+                let racoActual = [];
+                for(let p = 0; p < 5; p++) {
+                    let num = this.barallesRacos[r].pop();
+                    racoActual.push(num);
+                }
+                resultatsDia.push(racoActual);
+            }
+            
+            this.historialResultats.push(resultatsDia);
+            this.renderitzarGraella(this.diaActual, resultatsDia, true);
+            
+            this.diaActual++;
+            if (this.diaActual > this.TOTAL_DIES) {
+                this.btnReset.disabled = false;
+                this.btnSorteig.disabled = true;
+            }
+            
+            this.guardarProgres();
+        }
+
+        renderitzarHistorial() {
+            const container = document.getElementById(this.containerId);
+            container.innerHTML = '';
+            this.historialResultats.forEach((res, index) => {
+                this.renderitzarGraella(index + 1, res, false);
+            });
+        }
+
+        renderitzarGraella(dia, resultatsDia, animar) {
+            const container = document.getElementById(this.containerId);
+            const graella = document.createElement('div');
+            graella.className = 'graella-card';
+            graella.innerHTML = `
+                <div class="titol-dia">Dia ${dia}</div>
+                <div class="pilars-container"></div>
+            `;
+            container.prepend(graella);
+            
+            const pilarsContainer = graella.querySelector('.pilars-container');
+
+            for(let r = 0; r < 5; r++) {
+                let pilar = document.createElement('div');
+                pilar.className = 'pilar';
+                pilar.innerHTML = `
+                    <div class="pilar-header">Racó ${r + 1}</div>
+                    <div class="pilar-body"></div>
+                `;
+                pilarsContainer.appendChild(pilar);
+                
+                let body = pilar.querySelector('.pilar-body');
+
+                for(let p = 0; p < 5; p++) {
+                    let num = resultatsDia[r][p];
+                    let slot = document.createElement('div');
+                    slot.className = 'persona-slot';
+                    slot.innerText = num;
+                    body.appendChild(slot);
+
+                    if(animar) {
+                        let delay = (r) * 100 + p * 50;
+                        setTimeout(() => {
+                            slot.classList.add('filled');
+                        }, delay);
+                    } else {
+                        slot.classList.add('filled');
+                        slot.style.opacity = '1';
+                        slot.style.transform = 'scale(1)';
+                    }
+                }
+            }
+        }
+
+        novaBaralla(esNetejaManual) {
+            if (esNetejaManual) {
+                localStorage.removeItem('sorteig_' + this.assignatura);
+            }
+            
+            document.getElementById(this.containerId).innerHTML = '';
+            this.diaActual = 1;
+            this.historialResultats = [];
+            this.inicialitzarBaralles();
+            this.btnReset.disabled = true;
+            this.btnSorteig.disabled = false;
+            
+            this.guardarProgres();
         }
     }
 
-    function novaBaralla() {
-        // Netejar totes les graelles
-        document.getElementById('graellesContainer').innerHTML = '';
-        diaActual = 1;
-        document.getElementById('btnNovaBaralla').disabled = true;
-        document.getElementById('btnSorteig').disabled = false;
+    // Iniciar les dues instàncies (Mates i Llengua)
+    const jocMates = new SorteigAssignatura('mates', 'graelles-mates', 'btnSorteig-mates', 'btnNovaBaralla-mates');
+    const jocLlengua = new SorteigAssignatura('llengua', 'graelles-llengua', 'btnSorteig-llengua', 'btnNovaBaralla-llengua');
+
+
+    // --- CANVI DE PESTANYES ---
+    let pestanyaActual = 'mates';
+    function canviarPestanya(novaPestanya) {
+        pestanyaActual = novaPestanya;
+        document.getElementById('mates-content').style.display = novaPestanya === 'mates' ? 'block' : 'none';
+        document.getElementById('llengua-content').style.display = novaPestanya === 'llengua' ? 'block' : 'none';
+
+        // Actualitzar botons de pestanya
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`.tab-btn.${novaPestanya}`).classList.add('active');
+
+        // Actualitzar el fons
+        initSymbols();
     }
+
+
+    // --- FONS ANIMAT (SÍMBOLES DE LLENGUA I MATES) ---
+    const canvas = document.getElementById('bgCanvas');
+    const ctx = canvas.getContext('2d');
+    let symbols = [];
+
+    const simbolsMates = ['+', '-', '=', 'π', '√', '∑', 'Δ', '∞', '÷', 'x', '%', '∫'];
+    const simbolsLlengua = ['A', 'B', 'C', 'ç', 'ñ', '·', 'a', 'e', 'i', 'o', 'u', '?', '¡', '¿', ','];
+    
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class Simbol {
+        constructor() {
+            this.reset(true);
+        }
+        reset(inicial = false) {
+            this.x = Math.random() * canvas.width;
+            this.y = inicial ? Math.random() * canvas.height : -50;
+            this.size = Math.random() * 30 + 15;
+            this.speedY = Math.random() * 0.5 + 0.2;
+            this.speedX = Math.random() * 0.4 - 0.2;
+            
+            // Segons la pestanya actual, el fons mostra un 80% d'una assignatura i 20% de l'altra
+            let arr;
+            if (pestanyaActual === 'mates') {
+                arr = Math.random() > 0.2 ? simbolsMates : simbolsLlengua;
+            } else {
+                arr = Math.random() > 0.2 ? simbolsLlengua : simbolsMates;
+            }
+            this.char = arr[Math.floor(Math.random() * arr.length)];
+            
+            // Colors de guix: Groc, Blau, Blanc, Taronja, Lila
+            let colors = ['241, 196, 15', '52, 152, 219', '236, 240, 241', '230, 126, 34', '155, 89, 182'];
+            this.color = colors[Math.floor(Math.random() * colors.length)];
+            this.opacity = Math.random() * 0.4 + 0.1;
+            this.rotation = Math.random() * Math.PI;
+            this.rotSpeed = (Math.random() - 0.5) * 0.02;
+        }
+        update() {
+            this.y += this.speedY;
+            this.x += this.speedX;
+            this.rotation += this.rotSpeed;
+            if (this.y > canvas.height + 50) {
+                this.reset();
+            }
+        }
+        draw() {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.rotation);
+            ctx.font = `${this.size}px 'Caveat', cursive`;
+            ctx.fillStyle = `rgba(${this.color}, ${this.opacity})`;
+            ctx.fillText(this.char, 0, 0);
+            ctx.restore();
+        }
+    }
+
+    function initSymbols() {
+        symbols = [];
+        let numOfSymbols = (canvas.width * canvas.height) / 25000;
+        for (let i = 0; i < numOfSymbols; i++) {
+            symbols.push(new Simbol());
+        }
+    }
+
+    function animateBg() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        symbols.forEach(s => { s.update(); s.draw(); });
+        requestAnimationFrame(animateBg);
+    }
+
+    window.addEventListener('resize', initSymbols);
+    initSymbols();
+    animateBg();
+
 </script>
 
 </body>
