@@ -3,25 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pissarra Interactiva: Mates i Llengua</title>
+    <title>Aula Hologràfica: Mates i Llengua</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Orbitron:wght@500;700;900&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Poppins', sans-serif;
             margin: 0;
             padding: 20px;
             min-height: 100vh;
-            background-color: #2c3e2d; /* Color de pissarra verda fosca */
+            /* Fons profund que canvia de color amb transició */
+            background-color: #050508;
             color: #f0f0f0;
             display: flex;
             flex-direction: column;
             align-items: center;
             overflow-x: hidden;
+            transition: background-color 1.5s ease;
         }
 
-        /* Fons Canvas amb simbologia de Llengua i Mates */
+        /* Fons Canvas (Constel·lacions i Símbols) */
         #bgCanvas {
             position: fixed;
             top: 0;
@@ -34,64 +36,70 @@
         .container {
             width: 100%;
             max-width: 1000px;
-            background: rgba(28, 40, 29, 0.85);
-            backdrop-filter: blur(5px);
-            border-radius: 15px;
-            border: 3px dashed rgba(255, 255, 255, 0.3);
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            background: rgba(10, 10, 20, 0.65);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 40px;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(255,255,255,0.05);
             text-align: center;
             margin-bottom: 40px;
             position: relative;
         }
 
         h1 {
-            margin: 0 0 20px 0;
-            font-size: 2.8em;
+            margin: 0 0 25px 0;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5em;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            color: #ffffff;
-            text-shadow: 2px 2px 0px #d35400, -2px -2px 0px #2980b9;
+            letter-spacing: 4px;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.7), 0 0 20px rgba(0, 255, 255, 0.5);
+            transition: text-shadow 1s ease;
         }
 
-        /* Sistema de Pestanyes (Tabs) */
+        /* Sistema de Pestanyes */
         .tabs {
             display: flex;
             justify-content: center;
-            gap: 10px;
-            margin-bottom: 25px;
+            gap: 15px;
+            margin-bottom: 30px;
             flex-wrap: wrap;
         }
         .tab-btn {
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Orbitron', sans-serif;
             background: transparent;
-            border: 2px solid #7f8c8d;
-            padding: 10px 30px;
-            font-size: 18px;
-            font-weight: 600;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            padding: 12px 35px;
+            font-size: 16px;
+            font-weight: 700;
             color: #bdc3c7;
             border-radius: 50px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.4s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         .tab-btn.active.mates {
-            background: #2980b9;
-            border-color: #3498db;
-            color: white;
-            box-shadow: 0 0 15px rgba(52, 152, 219, 0.5);
+            border-color: #00ffff;
+            color: #00ffff;
+            background: rgba(0, 255, 255, 0.1);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.4), inset 0 0 10px rgba(0, 255, 255, 0.2);
         }
         .tab-btn.active.llengua {
-            background: #d35400;
-            border-color: #e67e22;
-            color: white;
-            box-shadow: 0 0 15px rgba(230, 126, 34, 0.5);
+            border-color: #ff00ff;
+            color: #ff00ff;
+            background: rgba(255, 0, 255, 0.1);
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.4), inset 0 0 10px rgba(255, 0, 255, 0.2);
         }
 
         .subtitol {
             font-family: 'Caveat', cursive;
-            font-size: 1.6em;
-            color: #f1c40f;
+            font-size: 1.8em;
+            color: #ffffff;
             margin-bottom: 25px;
+            text-shadow: 0 0 5px rgba(255,255,255,0.5);
         }
 
         .controls {
@@ -104,50 +112,53 @@
 
         button {
             font-family: 'Poppins', sans-serif;
-            border: 2px solid #ecf0f1;
-            padding: 12px 25px;
+            border: none;
+            padding: 14px 30px;
             font-size: 16px;
             font-weight: 600;
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.3s;
-            box-shadow: 3px 3px 0px rgba(0,0,0,0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
         }
 
-        /* Botons específics per pestanya */
+        /* Botons amb efecte hologràfic */
         #mates-content button:not(.reset) {
-            background: #2980b9;
-            color: #ecf0f1;
+            background: linear-gradient(45deg, #00ffff, #0077ff);
+            color: #000;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
         }
         #llengua-content button:not(.reset) {
-            background: #d35400;
-            color: #ecf0f1;
+            background: linear-gradient(45deg, #ff00ff, #ff5500);
+            color: #fff;
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.5);
         }
 
         button:hover {
-            transform: translate(-2px, -2px);
-            box-shadow: 5px 5px 0px rgba(0,0,0,0.6);
+            transform: scale(1.05);
+            filter: brightness(1.2);
         }
-        button:active {
-            transform: translate(1px, 1px);
-            box-shadow: 1px 1px 0px rgba(0,0,0,0.4);
-        }
+
         button:disabled {
             background: #2c3e50 !important;
             color: #7f8c8d !important;
-            border-color: #7f8c8d !important;
+            box-shadow: none !important;
             cursor: not-allowed;
-            box-shadow: none;
             transform: none;
         }
 
         button.reset {
-            background: #c0392b;
-            border-color: #e74c3c;
-            color: white;
+            background: transparent;
+            border: 2px solid #e74c3c;
+            color: #e74c3c;
         }
         button.reset:hover {
             background: #e74c3c;
+            color: #fff;
+            box-shadow: 0 0 15px rgba(231, 76, 60, 0.6);
         }
 
         .grids-container {
@@ -158,11 +169,13 @@
         }
 
         .graella-card {
-            background: rgba(20, 30, 21, 0.9);
-            border: 2px dashed rgba(241, 196, 15, 0.4);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 15px;
-            padding: 20px;
-            animation: slideDown 0.6s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+            padding: 25px;
+            backdrop-filter: blur(5px);
+            animation: slideDown 0.8s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
 
         @keyframes slideDown {
@@ -171,12 +184,14 @@
         }
 
         .titol-dia {
-            font-family: 'Caveat', cursive;
-            font-size: 2.5em;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5em;
             margin-bottom: 20px;
-            color: #f1c40f;
-            border-bottom: 3px solid rgba(241, 196, 15, 0.3);
-            padding-bottom: 5px;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 10px;
             display: inline-block;
         }
 
@@ -188,9 +203,9 @@
         }
 
         .pilar {
-            background: rgba(0, 0, 0, 0.3);
-            border: 2px solid #7f8c8d;
-            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
             width: 160px;
             display: flex;
             flex-direction: column;
@@ -198,17 +213,25 @@
         }
 
         .pilar-header {
-            padding: 10px 0;
-            font-weight: 800;
-            font-size: 1.1em;
+            padding: 12px 0;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1em;
             text-transform: uppercase;
-            border-bottom: 2px solid #7f8c8d;
-            color: #ecf0f1;
+            letter-spacing: 1px;
+            color: #fff;
         }
         
-        /* Colors de capçalera segons l'assignatura */
-        #mates-content .pilar-header { background: #34495e; }
-        #llengua-content .pilar-header { background: #7d3c98; }
+        #mates-content .pilar-header { 
+            background: rgba(0, 255, 255, 0.15); 
+            border-bottom: 1px solid rgba(0, 255, 255, 0.4);
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.8);
+        }
+        #llengua-content .pilar-header { 
+            background: rgba(255, 0, 255, 0.15); 
+            border-bottom: 1px solid rgba(255, 0, 255, 0.4);
+            text-shadow: 0 0 5px rgba(255, 0, 255, 0.8);
+        }
 
         .pilar-body {
             display: flex;
@@ -219,24 +242,26 @@
 
         .persona-slot {
             height: 50px;
-            border-radius: 6px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-family: 'Orbitron', sans-serif;
             font-size: 22px;
-            font-weight: bold;
-            background: transparent;
-            border: 2px dashed rgba(255, 255, 255, 0.2);
-            color: rgba(255, 255, 255, 0.2);
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            color: transparent;
             opacity: 0;
             transform: scale(0);
         }
 
         .persona-slot.filled {
-            background: #27ae60;
-            border: 2px solid #2ecc71;
-            color: #fff;
-            box-shadow: 0 0 10px rgba(46, 204, 113, 0.4);
+            background: rgba(0, 255, 0, 0.15);
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.4), inset 0 0 10px rgba(0, 255, 0, 0.1);
+            text-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
             animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
 
@@ -249,14 +274,15 @@
         .nota {
             margin-top: 20px;
             font-family: 'Caveat', cursive;
-            font-size: 1.4em;
+            font-size: 1.5em;
             color: #bdc3c7;
+            text-shadow: 0 0 5px rgba(0,0,0,0.5);
         }
 
         @media (max-width: 768px) {
             .pilar { width: 110px; }
             .persona-slot { height: 40px; font-size: 18px; }
-            h1 { font-size: 2em; }
+            h1 { font-size: 1.8em; letter-spacing: 2px; }
         }
     </style>
 </head>
@@ -265,7 +291,7 @@
 <canvas id="bgCanvas"></canvas>
 
 <div class="container">
-    <h1>Aula Interactiva</h1>
+    <h1 id="titolPrincipal">Aula Hologràfica</h1>
     
     <div class="tabs">
         <button class="tab-btn mates active" onclick="canviarPestanya('mates')">Matemàtiques</button>
@@ -439,7 +465,7 @@
         }
     }
 
-    // Iniciar les dues instàncies (Mates i Llengua)
+    // Iniciar les dues instàncies
     const jocMates = new SorteigAssignatura('mates', 'graelles-mates', 'btnSorteig-mates', 'btnNovaBaralla-mates');
     const jocLlengua = new SorteigAssignatura('llengua', 'graelles-llengua', 'btnSorteig-llengua', 'btnNovaBaralla-llengua');
 
@@ -451,19 +477,26 @@
         document.getElementById('mates-content').style.display = novaPestanya === 'mates' ? 'block' : 'none';
         document.getElementById('llengua-content').style.display = novaPestanya === 'llengua' ? 'block' : 'none';
 
-        // Actualitzar botons de pestanya
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelector(`.tab-btn.${novaPestanya}`).classList.add('active');
 
-        // Actualitzar el fons
-        initSymbols();
+        // Canviar el color del títol segons l'assignatura
+        const titol = document.getElementById('titolPrincipal');
+        if (novaPestanya === 'mates') {
+            titol.style.textShadow = '0 0 10px rgba(0, 255, 255, 0.7), 0 0 20px rgba(0, 255, 255, 0.5)';
+            document.body.style.backgroundColor = '#050510';
+        } else {
+            titol.style.textShadow = '0 0 10px rgba(255, 0, 255, 0.7), 0 0 20px rgba(255, 0, 255, 0.5)';
+            document.body.style.backgroundColor = '#100510';
+        }
     }
 
 
-    // --- FONS ANIMAT (SÍMBOLES DE LLENGUA I MATES) ---
+    // --- FONS ANIMAT COOL (CONSTEL·LACIÓ + SÍMBOLS HOLOGRÀFICS) ---
     const canvas = document.getElementById('bgCanvas');
     const ctx = canvas.getContext('2d');
-    let symbols = [];
+    let nodes = [];
+    let simbols = [];
 
     const simbolsMates = ['+', '-', '=', 'π', '√', '∑', 'Δ', '∞', '÷', 'x', '%', '∫'];
     const simbolsLlengua = ['A', 'B', 'C', 'ç', 'ñ', '·', 'a', 'e', 'i', 'o', 'u', '?', '¡', '¿', ','];
@@ -475,68 +508,115 @@
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    class Simbol {
+    // Xarxa de punts (Constel·lació)
+    class Node {
+        constructor() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+            this.size = Math.random() * 2 + 1;
+            this.speedX = (Math.random() - 0.5) * 0.5;
+            this.speedY = (Math.random() - 0.5) * 0.5;
+        }
+        update() {
+            this.x += this.speedX;
+            this.y += this.speedY;
+            if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+            if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+        }
+        draw() {
+            let color = pestanyaActual === 'mates' ? '0, 255, 255' : '255, 0, 255';
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${color}, 0.8)`;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = `rgba(${color}, 1)`;
+            ctx.fill();
+            ctx.shadowBlur = 0; // Reset
+        }
+    }
+
+    // Símbols surant amb glow
+    class SimbolHolo {
         constructor() {
             this.reset(true);
         }
         reset(inicial = false) {
             this.x = Math.random() * canvas.width;
             this.y = inicial ? Math.random() * canvas.height : -50;
-            this.size = Math.random() * 30 + 15;
-            this.speedY = Math.random() * 0.5 + 0.2;
-            this.speedX = Math.random() * 0.4 - 0.2;
+            this.size = Math.random() * 40 + 20;
+            this.speedY = Math.random() * 0.4 + 0.1;
+            this.speedX = (Math.random() - 0.5) * 0.3;
             
-            // Segons la pestanya actual, el fons mostra un 80% d'una assignatura i 20% de l'altra
-            let arr;
-            if (pestanyaActual === 'mates') {
-                arr = Math.random() > 0.2 ? simbolsMates : simbolsLlengua;
-            } else {
-                arr = Math.random() > 0.2 ? simbolsLlengua : simbolsMates;
-            }
+            let arr = pestanyaActual === 'mates' ? simbolsMates : simbolsLlengua;
+            // 20% de probabilitat de barrejar l'altra assignatura
+            if (Math.random() < 0.2) arr = pestanyaActual === 'mates' ? simbolsLlengua : simbolsMates;
             this.char = arr[Math.floor(Math.random() * arr.length)];
             
-            // Colors de guix: Groc, Blau, Blanc, Taronja, Lila
-            let colors = ['241, 196, 15', '52, 152, 219', '236, 240, 241', '230, 126, 34', '155, 89, 182'];
-            this.color = colors[Math.floor(Math.random() * colors.length)];
-            this.opacity = Math.random() * 0.4 + 0.1;
+            this.color = pestanyaActual === 'mates' ? '0, 255, 255' : '255, 0, 255';
+            if (Math.random() < 0.3) this.color = '255, 255, 255'; // Algun blanc per variar
+            
+            this.opacity = Math.random() * 0.3 + 0.1;
             this.rotation = Math.random() * Math.PI;
-            this.rotSpeed = (Math.random() - 0.5) * 0.02;
+            this.rotSpeed = (Math.random() - 0.5) * 0.01;
         }
         update() {
             this.y += this.speedY;
             this.x += this.speedX;
             this.rotation += this.rotSpeed;
-            if (this.y > canvas.height + 50) {
-                this.reset();
-            }
+            if (this.y > canvas.height + 50) this.reset();
         }
         draw() {
             ctx.save();
             ctx.translate(this.x, this.y);
             ctx.rotate(this.rotation);
-            ctx.font = `${this.size}px 'Caveat', cursive`;
+            ctx.font = `${this.size}px 'Orbitron', sans-serif`;
             ctx.fillStyle = `rgba(${this.color}, ${this.opacity})`;
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = `rgba(${this.color}, 0.8)`;
             ctx.fillText(this.char, 0, 0);
             ctx.restore();
+            ctx.shadowBlur = 0;
         }
     }
 
-    function initSymbols() {
-        symbols = [];
-        let numOfSymbols = (canvas.width * canvas.height) / 25000;
-        for (let i = 0; i < numOfSymbols; i++) {
-            symbols.push(new Simbol());
+    function initBackgroundElements() {
+        nodes = [];
+        simbols = [];
+        let numNodes = (canvas.width * canvas.height) / 20000;
+        let numSimbols = (canvas.width * canvas.height) / 40000;
+        
+        for (let i = 0; i < numNodes; i++) nodes.push(new Node());
+        for (let i = 0; i < numSimbols; i++) simbols.push(new SimbolHolo());
+    }
+
+    function drawConnections() {
+        let color = pestanyaActual === 'mates' ? '0, 255, 255' : '255, 0, 255';
+        for (let a = 0; a < nodes.length; a++) {
+            for (let b = a + 1; b < nodes.length; b++) {
+                let dist = Math.hypot(nodes[a].x - nodes[b].x, nodes[a].y - nodes[b].y);
+                if (dist < 150) {
+                    let opacity = 1 - (dist / 150);
+                    ctx.strokeStyle = `rgba(${color}, ${opacity * 0.3})`;
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(nodes[a].x, nodes[a].y);
+                    ctx.lineTo(nodes[b].x, nodes[b].y);
+                    ctx.stroke();
+                }
+            }
         }
     }
 
     function animateBg() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        symbols.forEach(s => { s.update(); s.draw(); });
+        drawConnections();
+        nodes.forEach(n => { n.update(); n.draw(); });
+        simbols.forEach(s => { s.update(); s.draw(); });
         requestAnimationFrame(animateBg);
     }
 
-    window.addEventListener('resize', initSymbols);
-    initSymbols();
+    window.addEventListener('resize', initBackgroundElements);
+    initBackgroundElements();
     animateBg();
 
 </script>
