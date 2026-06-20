@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestió de Racons: Mates i Llengua</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --mates-color: 59, 130, 246;
+            --llengua-color: 249, 115, 22;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            background-color: #ffffff;
+            color: #1e293b;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* "Coses per atras" - Blobs de color difuminats */
+        .blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -2;
+            opacity: 0.4;
+            animation: floatBlob 15s infinite ease-in-out alternate;
+        }
+        .blob-1 { width: 500px; height: 500px; background: rgb(var(--mates-color)); top: -150px; left: -100px; }
+        .blob-2 { width: 400px; height: 400px; background: rgb(var(--llengua-color)); bottom: -100px; right: -100px; animation-delay: -5s; }
+        
+        @keyframes floatBlob {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(50px, 80px) scale(1.1); }
+            100% { transform: translate(-30px, 40px) scale(0.9); }
+        }
+
+        /* Símbols surant per darrere */
+        #bgCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            padding: 40px;
+            box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        h1 {
+            margin: 0 0 25px 0;
+            font-size: 2.2em;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: #0f172a;
+        }
+
+        /* Sistema de Pestanyes */
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            background: #f1f5f9;
+            padding: 6px;
+            border-radius: 50px;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .tab-btn {
+            font-family: 'Inter', sans-serif;
+            background: transparent;
+            border: none;
+            padding: 10px 30px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #64748b;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .tab-btn.active.mates {
+            background: rgb(var(--mates-color));
+            color: white;
+            box-shadow: 0 4px 10px rgba(var(--mates-color), 0.3);
+        }
+        .tab-btn.active.llengua {
+            background: rgb(var(--llengua-color));
+            color: white;
+            box-shadow: 0 4px 10px rgba(var(--llengua-color), 0.3);
+        }
+
+        .subtitol {
+            font-family: 'Caveat', cursive;
+            font-size: 1.8em;
+            color: #64748b;
+            margin-bottom: 25px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 40px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 25px;
+        }
+
+        button {
+            font-family: 'Inter', sans-serif;
+            border: none;
+            padding: 12px 28px;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        #btnSorteig.mates {
+            background: rgb(var(--mates-color));
+            color: white;
+            box-shadow: 0 4px 10px rgba(var(--mates-color), 0.2);
+        }
+        #btnSorteig.llengua {
+            background: rgb(var(--llengua-color));
+            color: white;
+            box-shadow: 0 4px 10px rgba(var(--llengua-color), 0.2);
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            filter: brightness(1.05);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        button:disabled {
+            background: #e2e8f0 !important;
+            color: #94a3b8 !important;
+            box-shadow: none !important;
+            cursor: not-allowed;
+            transform: none;
+            border: 1px solid #cbd5e1 !important;
+        }
+
+        button.reset {
+            background: transparent;
+            border: 1px solid #cbd5e1;
+            color: #64748b;
+        }
+        button.reset:hover:not(:disabled) {
+            background: #fef2f2;
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+
+        .grids-container {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            padding-bottom: 20px;
+        }
+
+        .graella-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 20px -5px rgba(0,0,0,0.03);
+            animation: slideDown 0.6s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+            text-align: left;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .titol-dia {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.2em;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #334155;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: inline-block;
+            background: #f1f5f9;
+            padding: 6px 16px;
+            border-radius: 50px;
+        }
+
+        .pilars-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .pilar {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            width: 160px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .pilar-header {
+            padding: 12px 0;
+            font-weight: 700;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        #mates-content .pilar-header { 
+            background: #eff6ff; 
+            color: rgb(var(--mates-color));
+            border-bottom: 1px solid #dbeafe;
+        }
+        #llengua-content .pilar-header { 
+            background: #fff7ed; 
+            color: rgb(var(--llengua-color));
+            border-bottom: 1px solid #ffedd5;
+        }
+
+        .pilar-body {
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            gap: 8px;
+        }
+
+        .persona-slot {
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            background: #ffffff;
+            border: 1px dashed #cbd5e1;
+            color: transparent;
+            opacity: 0;
+            transform: scale(0);
+        }
+
+        .persona-slot.filled {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #16a34a;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            60% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .nota {
+            margin-top: 30px;
+            font-family: 'Caveat', cursive;
+            font-size: 1.5em;
+            color: #94a3b8;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .pilar { width: 110px; }
+            .persona-slot { height: 40px; font-size: 18px; }
+            h1 { font-size: 1.8em; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Blobs de fons -->
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<canvas id="bgCanvas"></canvas>
+
+<div class="container">
+    <h1>Gestió de Racons</h1>
+    
+    <div class="tabs">
+        <button class="tab-btn mates active" onclick="canviarPestanya('mates')">Matemàtiques</button>
+        <button class="tab-btn llengua" onclick="canviarPestanya('llengua')">Llengua</button>
+    </div>
+
+    <div class="controls">
+        <button id="btnSorteig" class="mates" onclick="sorteigGlobal()">Sorteig del Dia</button>
+        <button class="reset" id="btnNovaBaralla" onclick="novaBarallaActual()" disabled>Nova baralla</button>
+    </div>
+
+    <!-- CONTINGUT MATEMÀTIQUES -->
+    <div id="mates-content">
+        <div class="grids-container" id="graelles-mates"></div>
+    </div>
+
+    <!-- CONTINGUT LLENGUA -->
+    <div id="llengua-content" style="display: none;">
+        <div class="grids-container" id="graelles-llengua"></div>
+    </div>
+
+    <div class="nota">
+        "Fer un sorteig de 'Nova baralla' quan ja han passat per tots."
+    </div>
+</div>
+
+<script>
+    // --- CLASSE PER GESTIONAR EL JOC DE CADA ASSIGNATURA ---
+    class SorteigAssignatura {
+        constructor(assignatura, containerId) {
+            this.assignatura = assignatura;
+            this.containerId = containerId;
+            this.diaActual = 1;
+            this.barallesRacos = [[], [], [], [], []];
+            this.historialResultats = [];
+            this.TOTAL_DIES = 5;
+            this.carregarEstat();
+        }
+
+        carregarEstat() {
+            const savedData = localStorage.getItem('sorteig_' + this.assignatura);
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                this.diaActual = data.diaActual;
+                this.barallesRacos = data.barallesRacos;
+                this.historialResultats = data.historialResultats;
+                this.renderitzarHistorial();
+            } else {
+                this.novaBaralla(false);
+            }
+        }
+
+        guardarProgres() {
+            const data = {
+                diaActual: this.diaActual,
+                barallesRacos: this.barallesRacos,
+                historialResultats: this.historialResultats
+            };
+            localStorage.setItem('sorteig_' + this.assignatura, JSON.stringify(data));
+        }
+
+        inicialitzarBaralles() {
+            for(let i = 0; i < 5; i++) {
+                this.barallesRacos[i] = Array.from({length: 25}, (_, idx) => idx + 1);
+                this.barallesRacos[i].sort(() => Math.random() - 0.5);
+            }
+        }
+
+        sorteigDia() {
+            if (this.diaActual > this.TOTAL_DIES) return;
+
+            let resultatsDia = [];
+            for(let r = 0; r < 5; r++) {
+                let racoActual = [];
+                for(let p = 0; p < 5; p++) {
+                    let num = this.barallesRacos[r].pop();
+                    racoActual.push(num);
+                }
+                resultatsDia.push(racoActual);
+            }
+            
+            this.historialResultats.push(resultatsDia);
+            this.renderitzarGraella(this.diaActual, resultatsDia, true);
+            
+            this.diaActual++;
+            this.guardarProgres();
+        }
+
+        renderitzarHistorial() {
+            const container = document.getElementById(this.containerId);
+            container.innerHTML = '';
+            this.historialResultats.forEach((res, index) => {
+                this.renderitzarGraella(index + 1, res, false);
+            });
+        }
+
+        renderitzarGraella(dia, resultatsDia, animar) {
+            const container = document.getElementById(this.containerId);
+            const graella = document.createElement('div');
+            graella.className = 'graella-card';
+            graella.innerHTML = `
+                <div class="titol-dia">Dia ${dia}</div>
+                <div class="pilars-container"></div>
+            `;
+            container.prepend(graella);
+            
+            const pilarsContainer = graella.querySelector('.pilars-container');
+
+            for(let r = 0; r < 5; r++) {
+                let pilar = document.createElement('div');
+                pilar.className = 'pilar';
+                pilar.innerHTML = `
+                    <div class="pilar-header">Racó ${r + 1}</div>
+                    <div class="pilar-body"></div>
+                `;
+                pilarsContainer.appendChild(pilar);
+                
+                let body = pilar.querySelector('.pilar-body');
+
+                for(let p = 0; p < 5; p++) {
+                    let num = resultatsDia[r][p];
+                    let slot = document.createElement('div');
+                    slot.className = 'persona-slot';
+                    slot.innerText = num;
+                    body.appendChild(slot);
+
+                    if(animar) {
+                        let delay = (r) * 100 + p * 50;
+                        setTimeout(() => {
+                            slot.classList.add('filled');
+                        }, delay);
+                    } else {
+                        slot.classList.add('filled');
+                        slot.style.opacity = '1';
+                        slot.style.transform = 'scale(1)';
+                    }
+                }
+            }
+        }
+
+        novaBaralla(esNetejaManual) {
+            if (esNetejaManual) {
+                localStorage.removeItem('sorteig_' + this.assignatura);
+            }
+            
+            document.getElementById(this.containerId).innerHTML = '';
+            this.diaActual = 1;
+            this.historialResultats = [];
+            this.inicialitzarBaralles();
+            this.guardarProgres();
+        }
+        
+        estaAcabat() {
+            return this.diaActual > this.TOTAL_DIES;
+        }
+    }
+
+    // Iniciar les dues instàncies
+    const jocMates = new SorteigAssignatura('mates', 'graelles-mates');
+    const jocLlengua = new SorteigAssignatura('llengua', 'graelles-llengua');
+
+    // --- GESTIÓ D'INTERFÍCIE I BOTONS ---
+    let pestanyaActual = localStorage.getItem('pestanyaActual') || 'mates';
+    
+    function actualitzarBotons() {
+        const btnSorteig = document.getElementById('btnSorteig');
+        const btnReset = document.getElementById('btnNovaBaralla');
+        const jocActual = pestanyaActual === 'mates' ? jocMates : jocLlengua;
+
+        // Botó Sorteig
+        btnSorteig.disabled = jocActual.estaAcabat();
+        btnSorteig.className = pestanyaActual; // Assigna color segons pestanya
+
+        // Botó Reset Individual (Només actiu si l'assignatura actual està acabada)
+        if (jocActual.estaAcabat()) {
+            btnReset.disabled = false;
+        } else {
+            btnReset.disabled = true;
+        }
+    }
+
+    function canviarPestanya(novaPestanya) {
+        pestanyaActual = novaPestanya;
+        localStorage.setItem('pestanyaActual', novaPestanya); // Guardar pestanya actual
+        
+        document.getElementById('mates-content').style.display = novaPestanya === 'mates' ? 'block' : 'none';
+        document.getElementById('llengua-content').style.display = novaPestanya === 'llengua' ? 'block' : 'none';
+
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`.tab-btn.${novaPestanya}`).classList.add('active');
+
+        actualitzarBotons();
+    }
+
+    function sorteigGlobal() {
+        if (pestanyaActual === 'mates') {
+            jocMates.sorteigDia();
+        } else {
+            jocLlengua.sorteigDia();
+        }
+        actualitzarBotons();
+    }
+
+    // Nova funció: Només esborra l'apartat actual
+    function novaBarallaActual() {
+        let nomAssignatura = pestanyaActual === 'mates' ? 'Matemàtiques' : 'Llengua';
+        if (confirm("Segur que vols començar una nova baralla per a " + nomAssignatura + "?")) {
+            if (pestanyaActual === 'mates') {
+                jocMates.novaBaralla(true);
+            } else {
+                jocLlengua.novaBaralla(true);
+            }
+            actualitzarBotons();
+        }
+    }
+
+    // Inicialitzar UI amb la pestanya guardada
+    canviarPestanya(pestanyaActual);
+
+
+    // --- FONS ANIMAT (SÍMBOLS) ---
+    const canvas = document.getElementById('bgCanvas');
+    const ctx = canvas.getContext('2d');
+    let simbols = [];
+
+    const simbolsMates = ['+', '-', '=', 'π', '√', '∑', 'Δ', '∞', '÷', 'x', '%', '∫'];
+    const simbolsLlengua = ['A', 'B', 'C', 'ç', 'ñ', '·', 'a', 'e', 'i', 'o', 'u', '?', '¡', '¿', ','];
+    
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class SimbolFlotant {
+        constructor() {
+            this.reset(true);
+        }
+        reset(inicial = false) {
+            this.x = Math.random() * canvas.width;
+            this.y = inicial ? Math.random() * canvas.height : -100;
+            this.size = Math.random() * 60 + 30;
+            this.speedY = Math.random() * 0.3 + 0.05;
+            this.speedX = (Math.random() - 0.5) * 0.1;
+            
+            let arr = pestanyaActual === 'mates' ? simbolsMates : simbolsLlengua;
+            if (Math.random() < 0.2) arr = pestanyaActual === 'mates' ? simbolsLlengua : simbolsMates;
+            this.char = arr[Math.floor(Math.random() * arr.length)];
+            
+            this.rotation = Math.random() * Math.PI;
+            this.rotSpeed = (Math.random() - 0.5) * 0.005;
+        }
+        update() {
+            this.y += this.speedY;
+            this.x += this.speedX;
+            this.rotation += this.rotSpeed;
+            if (this.y > canvas.height + 100) this.reset();
+        }
+        draw() {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.rotation);
+            ctx.font = `${this.size}px 'Inter', sans-serif`;
+            // Colors més visibles però suaus
+            let color = pestanyaActual === 'mates' ? '59, 130, 246' : '249, 115, 22';
+            if (Math.random() < 0.5) color = '100, 116, 139'; // Gris
+            
+            ctx.fillStyle = `rgba(${color}, 0.08)`; // Lleugerament més opac perquè es vegin
+            ctx.filter = `blur(1px)`; 
+            ctx.fillText(this.char, 0, 0);
+            ctx.restore();
+            ctx.filter = 'none';
+        }
+    }
+
+    function initSymbols() {
+        simbols = [];
+        let numSimbols = (canvas.width * canvas.height) / 50000;
+        for (let i = 0; i < numSimbols; i++) {
+            simbols.push(new SimbolFlotant());
+        }
+    }
+
+    function animateBg() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        simbols.forEach(s => { s.update(); s.draw(); });
+        requestAnimationFrame(animateBg);
+    }
+
+    window.addEventListener('resize', initSymbols);
+    initSymbols();
+    animateBg();
+
+</script>
+
+</body>
+</html>
