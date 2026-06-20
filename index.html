@@ -1,151 +1,212 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="ca">
 <head>
-  <meta charset="UTF-8">
-  <title>Juegos - Home</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f6f8fa; }
-    #auth-container { background: #24292e; color: white; padding: 15px; text-align: center; }
-    
-    .login-box { display: inline-flex; gap: 10px; align-items: center; }
-    .login-box input { padding: 8px; border-radius: 4px; border: none; outline: none; }
-    
-    #btn-login-email { background-color: #4caf50; color: white; padding: 8px 15px; border-radius: 5px; cursor: pointer; border: none; font-weight: bold; }
-    #btn-logout { background-color: #f44336; color: white; margin-left: 10px; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
-    
-    .hidden { display: none; }
-    section { padding: 20px; border-bottom: 1px solid #eee; background: white; margin-bottom: 5px; }
-    a { text-decoration: none; color: #0366d6; font-size: 1.2rem; }
-    a:hover { text-decoration: underline; }
-
-    #dots-menu {
-      cursor: pointer;
-      margin: 0 15px;
-      font-weight: bold;
-      font-size: 24px;
-      color: white;
-      display: inline-block;
-      vertical-align: middle;
-      line-height: 1;
-      padding: 5px;
-    }
-    #dots-menu:hover { background-color: rgba(255, 255, 255, 0.2); border-radius: 50%; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorteig Números 1-25</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            text-align: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .numeros-base {
+            font-size: 18px;
+            margin-bottom: 30px;
+            color: #7f8c8d;
+        }
+        .botones {
+            margin-bottom: 30px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        button.reset {
+            background-color: #e74c3c;
+        }
+        button.reset:hover {
+            background-color: #c0392b;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+            font-size: 18px;
+        }
+        th {
+            background-color: #2c3e50;
+            color: white;
+        }
+        td.dia-label {
+            font-weight: bold;
+            background-color: #ecf0f1;
+        }
+        td.numero-salido {
+            background-color: #e8f5e9;
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .nota {
+            margin-top: 30px;
+            font-style: italic;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body>
 
-  <div id="auth-container">
-    <div id="user-logged-out" class="login-box">
-      <input type="email" id="email" placeholder="Correo (Gmail)">
-      <input type="password" id="password" placeholder="Contraseña">
-      <button id="btn-login-email">Entrar / Registrar</button>
+<div class="container">
+    <h1>Números: 1, 2, 3... 25</h1>
+    <div class="numeros-base" id="numerosDisponibles">
+        Disponibles: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25
     </div>
 
-    <div id="user-logged-in" class="hidden">
-      <span id="welcome-msg"></span>
-      <span id="dots-menu" title="Canviar de compte">⋮</span>
-      <button id="btn-logout">Cerrar Sesión</button>
+    <div class="botones">
+        <button onclick="sortearDia()">Sorteig del Dia</button>
+        <button class="reset" id="btnNovaBaralla" onclick="novaBaralla()" disabled>Nova baralla</button>
     </div>
-  </div>
 
-  <section><a href="juego1/index.html">Pets and Money</a></section>
-  <section><a href="juego2/index.html">No cliques el Botón</a></section>
-  <section><a href="juego3/index.html">Steal a Brainrot</a></section>
-  <section><a href="juego4/index.html">FiFa</a></section>
-  <section><a href="juego5/index.html">TikTok</a></section>
-  <section><a href="juego6/index.html">Clash Royale</a></section>
- <section><a href="juego7/index.html">La serpiente</a></section>
-  <section><a href="juego8/index.html">Rocket League</a></section>
-  <section><a href="juego9/index.html">Speed per click</a></section>
-  
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { 
-      getAuth, 
-      onAuthStateChanged, 
-      signOut, 
-      signInWithEmailAndPassword,
-      createUserWithEmailAndPassword 
-    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    <table>
+        <thead>
+            <tr>
+                <th>Dia</th>
+                <th>Racó 1</th>
+                <th>Racó 2</th>
+                <th>Racó 3</th>
+                <th>Racó 4</th>
+                <th>Racó 5</th>
+            </tr>
+        </thead>
+        <tbody id="tablaBody">
+            <!-- Las filas se generan con JavaScript -->
+        </tbody>
+    </table>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDpmb0duQ3ZgjbipPWsMvpLx3d-vojQAxM",
-      authDomain: "inici-de-sessio.firebaseapp.com",
-      projectId: "inici-de-sessio",
-      storageBucket: "inici-de-sessio.firebasestorage.app",
-      messagingSenderId: "106046428749",
-      appId: "1:106046428749:web:c555c61ff94f5f5691ee04",
-      measurementId: "G-CQRFD5Q0JT"
-    };
+    <div class="nota">
+        "Que es faça un sorteig de 'Nova baralla' per a quan ja han passat per tots."
+    </div>
+</div>
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+<script>
+    let numerosDisponibles = [];
+    let diaActual = 1;
+    const TOTAL_DIAS = 5;
+    const NUMEROS_POR_DIA = 5;
 
-    const loggedOutDiv = document.getElementById('user-logged-out');
-    const loggedInDiv = document.getElementById('user-logged-in');
-    const welcomeMsg = document.getElementById('welcome-msg');
-    const dotsMenu = document.getElementById('dots-menu');
-    
-    const emailInput = document.getElementById('email');
-    const passInput = document.getElementById('password');
-
-    // Función inteligente: Entra si existe, si no, Crea la cuenta
-    const handleAuth = async (email, password) => {
-      try {
-        // Intentar entrar
-        await signInWithEmailAndPassword(auth, email, password);
-      } catch (error) {
-        // Si el error es que el usuario no existe, lo creamos
-        if (error.code === 'auth/user-not-found') {
-          try {
-            await createUserWithEmailAndPassword(auth, email, password);
-            alert("Cuenta nueva creada automáticamente.");
-          } catch (createError) {
-            alert("Error: " + createError.message);
-          }
-        } else {
-          alert("Error: Contraseña incorrecta o formato inválido.");
+    // Inicializa el juego
+    function inicializar() {
+        // Llenar el array con números del 1 al 25
+        numerosDisponibles = Array.from({length: 25}, (_, i) => i + 1);
+        diaActual = 1;
+        
+        // Crear la tabla vacía
+        const tbody = document.getElementById('tablaBody');
+        tbody.innerHTML = '';
+        for(let i = 1; i <= TOTAL_DIAS; i++) {
+            tbody.innerHTML += `
+                <tr>
+                    <td class="dia-label">Dia ${i}</td>
+                    <td id="d${i}r1"></td>
+                    <td id="d${i}r2"></td>
+                    <td id="d${i}r3"></td>
+                    <td id="d${i}r4"></td>
+                    <td id="d${i}r5"></td>
+                </tr>
+            `;
         }
-      }
-    };
+        
+        document.getElementById('btnNovaBaralla').disabled = true;
+        actualizarTextoDisponibles();
+    }
 
-    // Botón principal
-    document.getElementById('btn-login-email').onclick = () => {
-      handleAuth(emailInput.value, emailInput.value === "" ? "" : passInput.value);
-    };
+    // Sortea 5 números para el día actual
+    function sortearDia() {
+        if (diaActual > TOTAL_DIAS) {
+            alert("Ja han passat per tots! Prem 'Nova baralla' per a començar de nou.");
+            return;
+        }
 
-    // Cambiar de cuenta (Tres puntos)
-    dotsMenu.onclick = async () => {
-      const email = prompt("Canviar de compte\nEscriu el correu:");
-      if (!email) return;
-      const password = prompt("Escriu la contrasenya:");
-      if (!password) return;
+        // Barajar y sacar 5 números
+        // (Los sacamos del final del array después de barajar para que no se repitan)
+        numerosDisponibles.sort(() => Math.random() - 0.5);
+        let numerosDelDia = [];
+        
+        for(let i = 0; i < NUMEROS_POR_DIA; i++) {
+            if(numerosDisponibles.length > 0) {
+                let num = numerosDisponibles.pop();
+                numerosDelDia.push(num);
+            }
+        }
 
-      await signOut(auth);
-      handleAuth(email, password);
-    };
+        // Colocar los números en la tabla
+        for(let i = 0; i < numerosDelDia.length; i++) {
+            let celda = document.getElementById(`d${diaActual}r${i+1}`);
+            celda.innerText = numerosDelDia[i];
+            celda.classList.add('numero-salido');
+        }
 
-    document.getElementById('btn-logout').onclick = () => {
-      signOut(auth);
-    };
+        diaActual++;
+        actualizarTextoDisponibles();
 
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        loggedOutDiv.classList.add('hidden');
-        loggedInDiv.classList.remove('hidden');
-        welcomeMsg.innerText = "Conectado como: " + user.email;
-      } else {
-        loggedOutDiv.classList.remove('hidden');
-        loggedInDiv.classList.add('hidden');
-      }
-    });
+        // Si ya no quedan números o se completaron los 5 días, activar botón de reinicio
+        if (diaActual > TOTAL_DIAS || numerosDisponibles.length === 0) {
+            document.getElementById('btnNovaBaralla').disabled = false;
+        }
+    }
 
-    window.onload = function () {
-      setTimeout(() => {
-        const entendido = confirm("⚠️ AVISO ⚠️\n\nEsta página es para jugar en casa...");
-        if (!entendido) window.location.href = "https://www.google.com";
-      }, 500);
-    };
-  </script>
+    // Reinicia el juego (Nova baralla)
+    function novaBaralla() {
+        inicializar();
+    }
+
+    // Muestra qué números quedan por salir
+    function actualizarTextoDisponibles() {
+        const div = document.getElementById('numerosDisponibles');
+        if (numerosDisponibles.length === 0) {
+            div.innerText = "No queden números disponibles.";
+        } else {
+            div.innerText = "Disponibles: " + numerosDisponibles.join(", ");
+        }
+    }
+
+    // Arrancar la página
+    inicializar();
+</script>
+
 </body>
 </html>
