@@ -153,6 +153,31 @@
             box-shadow: 0 4px 10px rgba(var(--llengua-color), 0.2);
         }
 
+        /* Botó "Tots els dies" (estil contorn del color de l'assignatura) */
+        #btnTotsDies.mates {
+            background: transparent;
+            border: 1.5px solid rgb(var(--mates-color));
+            color: rgb(var(--mates-color));
+        }
+        #btnTotsDies.llengua {
+            background: transparent;
+            border: 1.5px solid rgb(var(--llengua-color));
+            color: rgb(var(--llengua-color));
+        }
+        #btnTotsDies.mates:hover:not(:disabled) {
+            background: rgba(var(--mates-color), 0.08);
+        }
+        #btnTotsDies.llengua:hover:not(:disabled) {
+            background: rgba(var(--llengua-color), 0.08);
+        }
+
+        /* Botó imprimir */
+        #btnImprimir {
+            background: #0f172a;
+            color: white;
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.2);
+        }
+
         button:hover:not(:disabled) {
             transform: translateY(-2px);
             filter: brightness(1.05);
@@ -295,10 +320,118 @@
             text-align: center;
         }
 
+        /* Capçalera només visible en imprimir */
+        .print-header {
+            display: none;
+        }
+
         @media (max-width: 768px) {
             .pilar { width: 110px; }
             .persona-slot { height: 40px; font-size: 18px; }
             h1 { font-size: 1.8em; }
+        }
+
+        /* ============ ESTILS D'IMPRESSIÓ (PDF) ============ */
+        @media print {
+            @page { size: A4; margin: 12mm; }
+
+            * {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            body {
+                background: #ffffff !important;
+                display: block;
+                padding: 0;
+            }
+
+            /* Amagar tot el que no és contingut */
+            .blob, #bgCanvas, .tabs, .controls, .nota, h1 { display: none !important; }
+
+            .container {
+                max-width: 100%;
+                background: #ffffff !important;
+                border: none !important;
+                box-shadow: none !important;
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+                border-radius: 0;
+                padding: 0;
+                margin: 0;
+            }
+
+            /* Mostrar només les assignatures amb sorteigs (classe .print-show la posa el JS) */
+            #mates-content:not(.print-show),
+            #llengua-content:not(.print-show) { display: none !important; }
+            #mates-content.print-show,
+            #llengua-content.print-show { display: block !important; }
+
+            /* Llengua comença en pàgina nova (només si també s'imprimeix Mates) */
+            #mates-content.print-show + #llengua-content.print-show {
+                break-before: page;
+                page-break-before: always;
+            }
+
+            /* Capçalera d'impressió */
+            .print-header {
+                display: block;
+                text-align: left;
+                border-bottom: 3px solid #0f172a;
+                padding-bottom: 8px;
+                margin-bottom: 15px;
+            }
+            .print-title {
+                margin: 0;
+                font-size: 20px;
+                font-weight: 800;
+                color: #0f172a;
+            }
+            .print-date {
+                font-size: 12px;
+                color: #64748b;
+                margin-top: 4px;
+            }
+
+            /* Ordre cronològic: Dia 1 primer (a pantalla el més nou és a dalt) */
+            .grids-container {
+                flex-direction: column-reverse;
+                gap: 14px;
+            }
+
+            .graella-card {
+                animation: none !important;
+                opacity: 1 !important;
+                transform: none !important;
+                box-shadow: none;
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            /* Pilars ajustats a amplada A4, tots en una fila */
+            .graella-card .pilars-container {
+                gap: 10px;
+                flex-wrap: nowrap;
+            }
+            .pilars-container .pilar {
+                width: auto;
+                flex: 1 1 0;
+                min-width: 96px;
+            }
+
+            .pilar-body .persona-slot {
+                animation: none !important;
+                opacity: 1 !important;
+                transform: none !important;
+                height: 42px;
+                font-size: 18px;
+                box-shadow: none;
+            }
+            .pilar-body .persona-slot.filled {
+                background: #ffffff;
+                border: 1.5px solid #334155;
+                color: #0f172a;
+            }
         }
     </style>
 </head>
@@ -320,16 +453,26 @@
 
     <div class="controls">
         <button id="btnSorteig" class="mates" onclick="sorteigGlobal()">Sorteig del Dia</button>
+        <button id="btnTotsDies" class="mates" onclick="totsElsDies()">Tots els dies</button>
         <button class="reset" id="btnNovaBaralla" onclick="novaBarallaActual()" disabled>Nova baralla</button>
+        <button id="btnImprimir" onclick="imprimirPDF()">Imprimir / PDF</button>
     </div>
 
     <!-- CONTINGUT MATEMÀTIQUES -->
     <div id="mates-content">
+        <div class="print-header">
+            <h2 class="print-title">Racons de Matemàtiques</h2>
+            <div class="print-date" id="printDateMates"></div>
+        </div>
         <div class="grids-container" id="graelles-mates"></div>
     </div>
 
     <!-- CONTINGUT LLENGUA -->
     <div id="llengua-content" style="display: none;">
+        <div class="print-header">
+            <h2 class="print-title">Racons de Llengua</h2>
+            <div class="print-date" id="printDateLlengua"></div>
+        </div>
         <div class="grids-container" id="graelles-llengua"></div>
     </div>
 
@@ -397,6 +540,21 @@
             this.guardarProgres();
         }
 
+        // NOU: fa el sorteig de TOTS els dies que falten d'un sol cop
+        generarRestaDies() {
+            let index = 0;
+            while (!this.estaAcabat()) {
+                const resultatsDia = this.generarDistribucio();
+                if (!resultatsDia) break;
+                this.historialResultats.push(resultatsDia);
+                // Cada dia entra escalonat (offset) perquè es vegi la cascada
+                this.renderitzarGraella(this.diaActual, resultatsDia, true, index * 500);
+                this.diaActual++;
+                index++;
+            }
+            this.guardarProgres();
+        }
+
         // Repartiment del dia: cada alumne exactament UN cop avui,
         // i mai en un racó on ja hagi estat els dies anteriors.
         generarDistribucio() {
@@ -452,7 +610,7 @@
             });
         }
 
-        renderitzarGraella(dia, resultatsDia, animar) {
+        renderitzarGraella(dia, resultatsDia, animar, offset = 0) {
             const container = document.getElementById(this.containerId);
             const graella = document.createElement('div');
             graella.className = 'graella-card';
@@ -483,7 +641,7 @@
                     body.appendChild(slot);
 
                     if(animar) {
-                        let delay = (r) * 100 + p * 50;
+                        let delay = offset + (r) * 100 + p * 50;
                         setTimeout(() => {
                             slot.classList.add('filled');
                         }, delay);
@@ -520,12 +678,17 @@
 
     function actualitzarBotons() {
         const btnSorteig = document.getElementById('btnSorteig');
+        const btnTots = document.getElementById('btnTotsDies');
         const btnReset = document.getElementById('btnNovaBaralla');
         const jocActual = pestanyaActual === 'mates' ? jocMates : jocLlengua;
 
         // Botó Sorteig
         btnSorteig.disabled = jocActual.estaAcabat();
         btnSorteig.className = pestanyaActual; // Assigna color segons pestanya
+
+        // Botó Tots els dies
+        btnTots.disabled = jocActual.estaAcabat();
+        btnTots.className = pestanyaActual;
 
         // Botó Reset Individual (Només actiu si l'assignatura actual està acabada)
         if (jocActual.estaAcabat()) {
@@ -538,7 +701,7 @@
     function canviarPestanya(novaPestanya) {
         pestanyaActual = novaPestanya;
         localStorage.setItem('pestanyaActual', novaPestanya); // Guardar pestanya actual
-
+        
         document.getElementById('mates-content').style.display = novaPestanya === 'mates' ? 'block' : 'none';
         document.getElementById('llengua-content').style.display = novaPestanya === 'llengua' ? 'block' : 'none';
 
@@ -557,6 +720,18 @@
         actualitzarBotons();
     }
 
+    // NOU: sorteig automàtic de tots els dies que falten
+    function totsElsDies() {
+        const jocActual = pestanyaActual === 'mates' ? jocMates : jocLlengua;
+        if (jocActual.estaAcabat()) return;
+
+        const diaInicial = jocActual.diaActual;
+        if (confirm("Això farà automàticament el sorteig del dia " + diaInicial + " al 5. Vols continuar?")) {
+            jocActual.generarRestaDies();
+            actualitzarBotons();
+        }
+    }
+
     // Nova funció: Només esborra l'apartat actual
     function novaBarallaActual() {
         let nomAssignatura = pestanyaActual === 'mates' ? 'Matemàtiques' : 'Llengua';
@@ -570,6 +745,36 @@
         }
     }
 
+    // --- IMPRESSIÓ / PDF ---
+    function prepararImpressio() {
+        // Data actual en català
+        const dataText = 'Sorteig del ' + new Date().toLocaleDateString('ca-ES', {
+            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+        });
+        document.getElementById('printDateMates').textContent = dataText;
+        document.getElementById('printDateLlengua').textContent = dataText;
+
+        // Es.print-show tot seguit
+        const matesTeDades = jocMates.historialResultats.length > 0;
+        const llenguaTeDades = jocLlengua.historialResultats.length > 0;
+
+        // S'imprimeixen les assignatures amb sorteig; si cap en té, es mostra la pestanya actual
+        document.getElementById('mates-content').classList.toggle(
+            'print-show', matesTeDades || (!llenguaTeDades && pestanyaActual === 'mates')
+        );
+        document.getElementById('llengua-content').classList.toggle(
+            'print-show', llenguaTeDades || (!matesTeDades && pestanyaActual === 'llengua')
+        );
+    }
+
+    function imprimirPDF() {
+        prepararImpressio();
+        window.print();
+    }
+
+    // També si l'usuari imprimeix amb Ctrl+P directament
+    window.addEventListener('beforeprint', prepararImpressio);
+
     // Inicialitzar UI amb la pestanya guardada
     canviarPestanya(pestanyaActual);
 
@@ -581,7 +786,7 @@
 
     const simbolsMates = ['+', '-', '=', 'π', '√', '∑', 'Δ', '∞', '÷', 'x', '%', '∫'];
     const simbolsLlengua = ['A', 'B', 'C', 'ç', 'ñ', '·', 'a', 'e', 'i', 'o', 'u', '?', '¡', '¿', ','];
-
+    
     function resizeCanvas() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
@@ -599,11 +804,11 @@
             this.size = Math.random() * 60 + 30;
             this.speedY = Math.random() * 0.3 + 0.05;
             this.speedX = (Math.random() - 0.5) * 0.1;
-
+            
             let arr = pestanyaActual === 'mates' ? simbolsMates : simbolsLlengua;
             if (Math.random() < 0.2) arr = pestanyaActual === 'mates' ? simbolsLlengua : simbolsMates;
             this.char = arr[Math.floor(Math.random() * arr.length)];
-
+            
             this.rotation = Math.random() * Math.PI;
             this.rotSpeed = (Math.random() - 0.5) * 0.005;
         }
@@ -621,9 +826,9 @@
             // Colors més visibles però suaus
             let color = pestanyaActual === 'mates' ? '59, 130, 246' : '249, 115, 22';
             if (Math.random() < 0.5) color = '100, 116, 139'; // Gris
-
+            
             ctx.fillStyle = `rgba(${color}, 0.08)`; // Lleugerament més opac perquè es vegin
-            ctx.filter = `blur(1px)`;
+            ctx.filter = `blur(1px)`; 
             ctx.fillText(this.char, 0, 0);
             ctx.restore();
             ctx.filter = 'none';
