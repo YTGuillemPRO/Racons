@@ -344,60 +344,104 @@
         constructor(assignatura, containerId) {
             this.assignatura = assignatura;
             this.containerId = containerId;
-            this.diaActual = 1;
-            this.barallesRacos = [[], [], [], [], []];
-            this.historialResultats = [];
             this.TOTAL_DIES = 5;
+            this.NUM_RACOS = 5;
+            this.PER_RACO = 5;
+            this.TOTAL_ALUMNES = 25;
+            // Clau nova (v2): evita carregar partides antigues amb números repetits
+            this.clau = 'sorteig_v2_' + assignatura;
+            this.diaActual = 1;
+            this.historialResultats = [];
             this.carregarEstat();
         }
 
         carregarEstat() {
-            const savedData = localStorage.getItem('sorteig_' + this.assignatura);
+            const savedData = localStorage.getItem(this.clau);
             if (savedData) {
                 const data = JSON.parse(savedData);
                 this.diaActual = data.diaActual;
-                this.barallesRacos = data.barallesRacos;
                 this.historialResultats = data.historialResultats;
                 this.renderitzarHistorial();
             } else {
-                this.novaBaralla(false);
+                this.guardarProgres();
             }
         }
 
         guardarProgres() {
-            const data = {
+            localStorage.setItem(this.clau, JSON.stringify({
                 diaActual: this.diaActual,
-                barallesRacos: this.barallesRacos,
                 historialResultats: this.historialResultats
-            };
-            localStorage.setItem('sorteig_' + this.assignatura, JSON.stringify(data));
+            }));
         }
 
-        inicialitzarBaralles() {
-            for(let i = 0; i < 5; i++) {
-                this.barallesRacos[i] = Array.from({length: 25}, (_, idx) => idx + 1);
-                this.barallesRacos[i].sort(() => Math.random() - 0.5);
-            }
+        // Quins racós ha visitat ja cada alumne (es dedueix de l'historial)
+        racosVisitats() {
+            const visitats = Array.from({length: this.TOTAL_ALUMNES + 1}, () => new Set());
+            this.historialResultats.forEach(resultatsDia => {
+                resultatsDia.forEach((alumnes, raco) => {
+                    alumnes.forEach(num => visitats[num].add(raco));
+                });
+            });
+            return visitats;
         }
 
         sorteigDia() {
-            if (this.diaActual > this.TOTAL_DIES) return;
+            if (this.estaAcabat()) return;
 
-            let resultatsDia = [];
-            for(let r = 0; r < 5; r++) {
-                let racoActual = [];
-                for(let p = 0; p < 5; p++) {
-                    let num = this.barallesRacos[r].pop();
-                    racoActual.push(num);
-                }
-                resultatsDia.push(racoActual);
-            }
-            
+            const resultatsDia = this.generarDistribucio();
+            if (!resultatsDia) return;
+
             this.historialResultats.push(resultatsDia);
             this.renderitzarGraella(this.diaActual, resultatsDia, true);
-            
             this.diaActual++;
             this.guardarProgres();
+        }
+
+        // Repartiment del dia: cada alumne exactament UN cop avui,
+        // i mai en un racó on ja hagi estat els dies anteriors.
+        generarDistribucio() {
+            const visitats = this.racosVisitats();
+            // Sempre existeix una distribució vàlida; si la tirada aleatòria
+            // no quadra, es repeteix amb altra sort.
+            for (let intent = 0; intent < 200; intent++) {
+                const resultat = this.intentarDistribucio(visitats);
+                if (resultat) return resultat;
+            }
+            return null;
+        }
+
+        intentarDistribucio(visitats) {
+            const resultats = [[], [], [], [], []];
+            const colocatsAvui = new Set();
+            const ordreRacos = this.barrejar([0, 1, 2, 3, 4]);
+
+            for (const raco of ordreRacos) {
+                const candidats = [];
+                for (let n = 1; n <= this.TOTAL_ALUMNES; n++) {
+                    if (!colocatsAvui.has(n) && !visitats[n].has(raco)) {
+                        candidats.push(n);
+                    }
+                }
+                // Si a aquest racó no li queden 5 alumnes vàlids, l'intent falla
+                if (candidats.length < this.PER_RACO) return null;
+
+                this.barrejar(candidats);
+                for (let i = 0; i < this.PER_RACO; i++) {
+                    const num = candidats[i];
+                    resultats[raco].push(num);
+                    colocatsAvui.add(num);
+                }
+            }
+            return resultats; // 5 racós x 5 alumnes = els 25, tots diferents
+        }
+
+        // Fisher-Yates
+        barrejar(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
         }
 
         renderitzarHistorial() {
@@ -417,7 +461,7 @@
                 <div class="pilars-container"></div>
             `;
             container.prepend(graella);
-            
+
             const pilarsContainer = graella.querySelector('.pilars-container');
 
             for(let r = 0; r < 5; r++) {
@@ -428,7 +472,7 @@
                     <div class="pilar-body"></div>
                 `;
                 pilarsContainer.appendChild(pilar);
-                
+
                 let body = pilar.querySelector('.pilar-body');
 
                 for(let p = 0; p < 5; p++) {
@@ -454,16 +498,14 @@
 
         novaBaralla(esNetejaManual) {
             if (esNetejaManual) {
-                localStorage.removeItem('sorteig_' + this.assignatura);
+                localStorage.removeItem(this.clau);
             }
-            
             document.getElementById(this.containerId).innerHTML = '';
             this.diaActual = 1;
             this.historialResultats = [];
-            this.inicialitzarBaralles();
             this.guardarProgres();
         }
-        
+
         estaAcabat() {
             return this.diaActual > this.TOTAL_DIES;
         }
@@ -475,7 +517,7 @@
 
     // --- GESTIÓ D'INTERFÍCIE I BOTONS ---
     let pestanyaActual = localStorage.getItem('pestanyaActual') || 'mates';
-    
+
     function actualitzarBotons() {
         const btnSorteig = document.getElementById('btnSorteig');
         const btnReset = document.getElementById('btnNovaBaralla');
@@ -496,7 +538,7 @@
     function canviarPestanya(novaPestanya) {
         pestanyaActual = novaPestanya;
         localStorage.setItem('pestanyaActual', novaPestanya); // Guardar pestanya actual
-        
+
         document.getElementById('mates-content').style.display = novaPestanya === 'mates' ? 'block' : 'none';
         document.getElementById('llengua-content').style.display = novaPestanya === 'llengua' ? 'block' : 'none';
 
@@ -539,7 +581,7 @@
 
     const simbolsMates = ['+', '-', '=', 'π', '√', '∑', 'Δ', '∞', '÷', 'x', '%', '∫'];
     const simbolsLlengua = ['A', 'B', 'C', 'ç', 'ñ', '·', 'a', 'e', 'i', 'o', 'u', '?', '¡', '¿', ','];
-    
+
     function resizeCanvas() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
@@ -557,11 +599,11 @@
             this.size = Math.random() * 60 + 30;
             this.speedY = Math.random() * 0.3 + 0.05;
             this.speedX = (Math.random() - 0.5) * 0.1;
-            
+
             let arr = pestanyaActual === 'mates' ? simbolsMates : simbolsLlengua;
             if (Math.random() < 0.2) arr = pestanyaActual === 'mates' ? simbolsLlengua : simbolsMates;
             this.char = arr[Math.floor(Math.random() * arr.length)];
-            
+
             this.rotation = Math.random() * Math.PI;
             this.rotSpeed = (Math.random() - 0.5) * 0.005;
         }
@@ -579,9 +621,9 @@
             // Colors més visibles però suaus
             let color = pestanyaActual === 'mates' ? '59, 130, 246' : '249, 115, 22';
             if (Math.random() < 0.5) color = '100, 116, 139'; // Gris
-            
+
             ctx.fillStyle = `rgba(${color}, 0.08)`; // Lleugerament més opac perquè es vegin
-            ctx.filter = `blur(1px)`; 
+            ctx.filter = `blur(1px)`;
             ctx.fillText(this.char, 0, 0);
             ctx.restore();
             ctx.filter = 'none';
